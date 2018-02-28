@@ -1,0 +1,96 @@
+public static class PropertyName
+{
+	public static string GetPropertyName<TModel, TProperty>(Expression<Func<TModel, TProperty>> property)
+	{
+		MemberExpression memberExpression = (MemberExpression)property.Body;
+
+		return memberExpression.Member.Name;
+	}
+}
+
+ public interface IRepository<TEntity> where TEntity : class
+    {
+        TEntity Get(int id);
+        IEnumerable<TEntity> GetAll();
+        IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> predicate);
+
+        void Add(TEntity entity);
+        void AddRange(IEnumerable<TEntity> entities);
+
+        void Remove(TEntity entity);
+        void RemoveRange(IEnumerable<TEntity> entities);
+       
+    }
+
+
+public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
+    {
+        protected readonly DbContext _context;
+        public Repository(DbContext context)
+        {
+            _context = context;
+        }
+        public void Add(TEntity entity)
+        {
+            _context.Set<TEntity>().Add(entity);
+        }
+
+        public void AddRange(IEnumerable<TEntity> entities)
+        {
+            _context.Set<TEntity>().AddRange(entities);
+        }
+
+        public IEnumerable<TEntity> Find(Expression<Func<TEntity, bool>> predicate)
+        {
+            return _context.Set<TEntity>().Where(predicate);
+        }
+
+        public TEntity Get(int id)
+        {
+            return _context.Set<TEntity>().Find(id);
+        }
+
+        public IEnumerable<TEntity> GetAll()
+        {
+            return _context.Set<TEntity>().ToList();
+        }
+
+        public void Remove(TEntity entity)
+        {
+            _context.Set<TEntity>().Remove(entity);
+        }
+
+        public void RemoveRange(IEnumerable<TEntity> entities)
+        {
+            _context.Set<TEntity>().RemoveRange(entities);
+        }
+
+        
+    }
+	
+	
+	public static class AutoMapperExtensions
+    {
+        public static IMappingExpression<TSource, TDestination> IgnoreAllDestinationVirtual<TSource, TDestination>(this IMappingExpression<TSource, TDestination> expression)
+        {
+            var desType = typeof(TDestination);
+            foreach (var property in desType.GetProperties().Where(p => p.GetGetMethod().IsVirtual && !p.GetGetMethod().IsFinal))
+            {
+                expression.ForMember(property.Name, opt => opt.Ignore());
+            }
+
+            return expression;
+        }
+
+        public static IMappingExpression<TSource, TDestination> IgnoreAllSourceVirtual<TSource, TDestination>(this IMappingExpression<TSource, TDestination> expression)
+        {
+            var srcType = typeof(TSource);
+            foreach (var property in srcType.GetProperties().Where(p => p.GetGetMethod().IsVirtual && !p.GetGetMethod().IsFinal))
+            {
+                expression.ForSourceMember(property.Name, opt => opt.Ignore());
+            }
+
+            return expression;
+        }
+
+    }
